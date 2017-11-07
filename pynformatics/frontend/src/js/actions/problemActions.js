@@ -18,7 +18,7 @@ export function fetchProblem(problemId) {
 
 export function submitProblem(problemId, data) {
     return dispatch => {
-        const url = `${config.apiUrl}/problem/${problemId}/submit`;
+        const url = `${config.apiUrl}/problem/${problemId}/submit_v2`;
 
         let formData = new FormData;
         formData.append('lang_id', data.langId);

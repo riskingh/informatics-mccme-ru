@@ -11,7 +11,7 @@ from pynformatics.utils.constants import (
 )
 from pynformatics.view.utils import RequestGetUserId
 from pynformatics.utils.exceptions import (
-    UnauthorizedException,
+    Unauthorized,
 )
 
 
@@ -60,13 +60,19 @@ class Context:
 
     def check_auth(self):
         if self._user_id == -1:
-            raise UnauthorizedException
+            raise Unauthorized
 
-    def get_languages(self):
+    def get_allowed_languages(self):
         """
         Returns dict (id -> language name) of allowed languages for this context
         """
-        return LANG_NAME_BY_ID
+        allowed_languages = set(LANG_NAME_BY_ID.keys())
+        if self.statement:
+            allowed_languages &= set(self.statement.get_allowed_languages())
+        return {
+            allowed_language: LANG_NAME_BY_ID[allowed_language]
+            for allowed_language in allowed_languages
+        }
 
 
 def with_context(view_function=None, require_auth=False):
