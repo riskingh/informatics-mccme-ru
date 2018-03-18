@@ -98,10 +98,12 @@ def problem_submits_v2(request, context):
         raise Forbidden(f'Language id "{language_id}" is not allowed')
 
     queue_submit(
-        context=context,
+        user=context.user,
+        problem=context.problem,
         file=file,
         language_id=language_id,
-        ejudge_url=ejudge_url
+        ejudge_url=ejudge_url,
+        statement=context.statement,
     )
 
     return {}

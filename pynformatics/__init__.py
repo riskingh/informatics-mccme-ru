@@ -10,6 +10,7 @@ from pynformatics.models import DBSession
 from pynformatics.view.comment import *
 from pynformatics.utils.oauth import fill_oauth_config_secrets
 from pynformatics.utils.url_encoder import init_url_encoder
+from pynformatics.utils.redis import init_with_settings as init_redis
 
 
 log = logging.getLogger(__name__)
@@ -17,6 +18,13 @@ monkey.patch_all()
 
 
 SCAN_IGNORE = ['pynformatics.tests']
+
+
+def init_with_settings(settings):
+    fill_oauth_config_secrets(settings)
+    init_redis(settings)
+    init_submit_queue(settings)
+    init_url_encoder(settings)
 
 
 def main(global_config, **settings):
@@ -31,6 +39,8 @@ def main(global_config, **settings):
         engine = engine_from_config(settings, 'sqlalchemy.')
 
     DBSession.configure(bind=engine, expire_on_commit=False)
+
+    init_with_settings(settings)
 
     config = Configurator(settings=settings)
 
@@ -161,11 +171,6 @@ def main(global_config, **settings):
     except ImportError:
         log.error('UWSGI is not imported. Websockets will not work!')
         SCAN_IGNORE.append('pynformatics.view.websocket')
-
-
-    fill_oauth_config_secrets(settings)
-    init_submit_queue(settings)
-    init_url_encoder(settings)
 
     config.scan(ignore=SCAN_IGNORE)
 
