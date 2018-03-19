@@ -5,6 +5,7 @@ import transaction
 from pynformatics.contest.ejudge.ejudge_proxy import submit
 from pynformatics.models import DBSession
 from pynformatics.model.pynformatics_run import PynformaticsRun
+from pynformatics.utils.context import Context
 from pynformatics.utils.notify import notify_user
 
 
@@ -102,11 +103,20 @@ class Submit:
         )
         pynformatics_run = DBSession.merge(pynformatics_run)
         DBSession.flush([pynformatics_run])
+        # DBSession.refresh(pynformatics_run)
         DBSession.refresh(pynformatics_run.run)
 
-        # notify_user(
-        #     user_id=self.user_id,
-        #     runs=[pynformatics_run.run.serialize(self.context)],
-        # )
+        notify_user(
+            user_id=self.user_id,
+            runs=[
+                pynformatics_run.run.serialize(
+                    Context(
+                        user_id=self.user_id,
+                        problem_id=self.problem_id,
+                        statement_id=self.statement_id,
+                    )
+                )
+            ],
+        )
 
         transaction.commit()

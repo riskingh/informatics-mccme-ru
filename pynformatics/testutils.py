@@ -37,6 +37,9 @@ class TestCase(unittest.TestCase):
                 'engine': engine,
             },
             **{
+                'redis.host': 'localhost',
+                'redis.port': '6379',
+                'redis.db': '0',
                 'session.key': 'session',
                 'url_encoder.alphabet': 'abc',
             }

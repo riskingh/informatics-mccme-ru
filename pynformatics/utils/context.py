@@ -25,7 +25,25 @@ class Context:
         'statement_id',
     ]
 
-    def __init__(self, request):
+    def __init__(self,
+                 request=None,
+                 user_id=None,
+                 problem_id=None,
+                 statement_id=None,
+                 ):
+        if request:
+            self.request = request
+        else:
+            self._user_id = user_id
+            self._problem_id = problem_id
+            self._statement = statement_id
+
+    @property
+    def request(self):
+        return self._request
+
+    @request.setter
+    def request(self, request):
         self._request = request
 
         if request.session.get('user_id'):

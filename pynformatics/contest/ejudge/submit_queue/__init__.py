@@ -1,14 +1,18 @@
 from .queue import SubmitQueue
 
 
-submit_queue = None
-queue_submit = None
+class DefaultSubmitQueue:
+    submit_queue = None
+
+    def queue_submit(self, *args, **kwargs):
+        self.submit_queue.put_submit(*args, **kwargs)
+
+
+_instance = DefaultSubmitQueue()
+queue_submit = _instance.queue_submit
 
 
 def init_submit_queue(settings):
-    global submit_queue, queue_submit
-
-    submit_queue = SubmitQueue(
+    _instance.submit_queue = SubmitQueue(
         workers=int(settings.get('submit_queue.workers', '2'))
     )
-    queue_submit = submit_queue.put_submit

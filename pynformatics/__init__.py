@@ -10,7 +10,7 @@ from pynformatics.models import DBSession
 from pynformatics.view.comment import *
 from pynformatics.utils.oauth import fill_oauth_config_secrets
 from pynformatics.utils.url_encoder import init_url_encoder
-from pynformatics.utils.redis import init_with_settings as init_redis
+from pynformatics.utils.redis import init_redis
 
 
 log = logging.getLogger(__name__)

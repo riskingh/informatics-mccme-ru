@@ -46,18 +46,21 @@ class TestEjudge__submit_queue_submit_send(TestCase):
         self.file_mock.value.decode.return_value = 'source'
         self.file_mock.filename = 'filename'
 
-        self.context_mock = mock.Mock()
-        self.context_mock.user = self.users[0]
-        self.context_mock.problem = self.problems[0]
-        self.context_mock.statement_id = self.statements[0].id
-
-    def test_simple(self):
-        submit = Submit(
-            context=self.context_mock,
+        self.submit = Submit(
+            user_id=self.users[0].id,
             file=self.file_mock,
             language_id=27,
+            ejudge_contest_id=self.problems[0].ejudge_contest_id,
+            ejudge_problem_id=self.problems[0].problem_id,
+            ejudge_user_login=self.users[0].login,
+            ejudge_user_password=self.users[0].password,
             ejudge_url='ejudge_url',
         )
+
+
+
+    def test_simple(self):
+        self.submit.statement_id = self.statements[0].id
 
         ejudge_submit_mock.return_value = {
             'code': 0,
@@ -66,7 +69,7 @@ class TestEjudge__submit_queue_submit_send(TestCase):
 
         # Отправка задачи должна закоммитить созданную посылку, в тестах это вызывает ошибку
         assert_that(
-            calling(submit.send).with_args(),
+            calling(self.submit.send).with_args(),
             raises(DoomedTransaction)
         )
 
@@ -100,16 +103,9 @@ class TestEjudge__submit_queue_submit_send(TestCase):
 
     def test_handles_submit_exception(self):
         # В случае, если функция submit бросила исключение
-        submit = Submit(
-            context=self.context_mock,
-            file=self.file_mock,
-            language_id=27,
-            ejudge_url='ejudge_url',
-        )
-
         ejudge_submit_mock.side_effect = lambda *args, **kwargs: 1 / 0
         assert_that(
-            calling(submit.send),
+            calling(self.submit.send),
             is_not(raises(anything())),
         )
 
@@ -127,21 +123,13 @@ class TestEjudge__submit_queue_submit_send(TestCase):
 
     def test_handles_submit_error(self):
         # В случае, если ejudge вернул не 0 код
-
-        submit = Submit(
-            context=self.context_mock,
-            file=self.file_mock,
-            language_id=27,
-            ejudge_url='ejudge_url',
-        )
-
         ejudge_submit_mock.return_value = {
             'code': 123,
             'message': 'some message',
             'other': 'secrets'
         }
         assert_that(
-            calling(submit.send),
+            calling(self.submit.send),
             is_not(raises(anything())),
         )
 

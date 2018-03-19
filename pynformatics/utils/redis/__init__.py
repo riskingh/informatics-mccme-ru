@@ -5,7 +5,7 @@ class RedisWrapper:
     def __init__(self):
         self.redis = None
 
-    def init_with_settings(self, settings):
+    def init_redis(self, settings):
         self.redis = StrictRedis(
             host=settings['redis.host'],
             port=settings['redis.port'],
@@ -17,4 +17,4 @@ class RedisWrapper:
 
 
 redis = RedisWrapper()
-init_with_settings = redis.init_with_settings
+init_redis = redis.init_redis
