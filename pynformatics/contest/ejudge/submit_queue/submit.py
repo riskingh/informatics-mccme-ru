@@ -104,7 +104,7 @@ class Submit:
             return
 
         run = Run(
-            user=self.user,
+            user_id=self.user.id,
             problem=self.problem,
             statement_id=self.statement_id,
             create_time=self.create_time,

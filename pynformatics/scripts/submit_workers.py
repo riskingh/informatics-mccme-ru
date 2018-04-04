@@ -10,7 +10,6 @@ from pynformatics.contest.ejudge.submit_queue.queue import SubmitQueue
 from pynformatics.contest.ejudge.submit_queue.worker import SubmitWorker
 from pynformatics.models import DBSession
 
-
 monkey.patch_all()
 
 

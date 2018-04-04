@@ -70,6 +70,7 @@ def notification_update_run(request, context):
         ejudge_run_id=run_id, 
         ejudge_contest_id=contest_id
     )
+    DBSession.flush([run])
 
     context.user_id = run.user_id
     notify_user(run.user_id, runs=[run.serialize(context)])

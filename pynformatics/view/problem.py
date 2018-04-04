@@ -97,14 +97,14 @@ def problem_submits_v2(request, context):
     if language_id not in context.get_allowed_languages():
         raise Forbidden(f'Language id "{language_id}" is not allowed')
 
-    queue_submit(
+    submit = queue_submit(
         context=context,
         file=file,
         language_id=language_id,
         ejudge_url=ejudge_url
     )
 
-    return {}
+    return submit.serialize(context)
 
 @view_config(route_name='problem.ant.submit', renderer='json')
 def problem_ant_submits(request):
