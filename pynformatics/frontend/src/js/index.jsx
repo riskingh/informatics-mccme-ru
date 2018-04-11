@@ -7,6 +7,7 @@ import { Provider } from 'react-redux';
 import App from './components/App';
 import { store, persistor } from './store';
 
+
 window.store = store;
 ReactDOM.render(
   <Provider store={store}>

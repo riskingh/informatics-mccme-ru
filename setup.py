@@ -44,5 +44,6 @@ setup(
         pynformatics_copy_runs = pynformatics.scripts.copy_runs:main
         pynformatics_duplicate_runs = pynformatics.scripts.copy_runs:duplicate
         pynformatics_submit_workers = pynformatics.scripts.submit_workers:main
+        rmatics_submit_workers = rmatics.scripts.submit_workers:main
     """,
 )

@@ -1,14 +1,15 @@
 const debug = process.env.NODE_ENV !== 'production';
 const webpack = require('webpack');
 const path = require('path');
+const UglifyJsPlugin = require('uglifyjs-webpack-plugin');
 
 
 const API_URLS = {
   'debug': {
-    'websocket': JSON.stringify('ws://localhost:8080/websocket'),
+    'websocket': JSON.stringify('http://localhost:8080'),
   },
   'production': {
-    'websocket': JSON.stringify('wss://rmatics.info/api_v2/websocket'),
+    'websocket': JSON.stringify('https://rmatics.info/api'),
   }
 }
 
@@ -85,24 +86,7 @@ module.exports = {
       '__websocket__': API_URLS['production']['websocket'],
     }),
     new webpack.optimize.OccurrenceOrderPlugin(),
-    new webpack.optimize.UglifyJsPlugin({
-      compress: {
-        warnings: false,
-        screw_ie8: true,
-        conditionals: true,
-        unused: true,
-        comparisons: true,
-        sequences: true,
-        dead_code: true,
-        evaluate: true,
-        if_return: true,
-        join_vars: true
-      },
-      output: {
-        comments: false
-      },
-      mangle: true,
-    }),
+    new UglifyJsPlugin(),
   ],
   resolve: {
     extensions: ['.js', '.jsx'],
@@ -114,13 +98,13 @@ module.exports = {
     disableHostCheck: true,
     historyApiFallback: true,
     proxy: {
-      '/api_v2': {
+      '/api': {
         target: 'http://informatics.msk.ru:6349',
-        pathRewrite: {'^/api_v2': ''},
+        pathRewrite: {'^/api': ''},
       },
-      '/websocket': {
-        target: 'ws://informatics.msk.ru:6349/websocket',
-        pathRewrite: {'.*': ''},
+      '/socket.io': {
+        target: 'http://informatics.msk.ru:6349/socket.io',
+        // pathRewrite: {'.*': ''},
         ws: true,
       }
     },

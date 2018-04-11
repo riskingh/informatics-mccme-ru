@@ -6,7 +6,7 @@ import store from '../store';
 
 
 const axiosInstance = axios.create({
-  baseURL: '/api_v2',
+  baseURL: '/api',
   withCredentials: true,
 });
 
