@@ -20,7 +20,7 @@ const SamplesProtocolWrapper = SampleWrapper.extend`
 
 export default ({samples}) => {
   const sampleBlocks = _.map(samples, (value, key) => {
-    const wrapped = _.mapValues(_.pick(value, ['input', 'corr', 'output', 'error_output']),
+    const wrapped = _.mapValues(_.pick(value, ['input', 'corr', 'output', 'errorOutput']),
         text => Sample.wrapLines(text));
     const maxLength = _.maxBy(_.map(_.pick(wrapped, ['input', 'corr'])),
         value => value.maxLength).maxLength;
@@ -51,12 +51,12 @@ export default ({samples}) => {
           </div>
         </Col>
         {
-          wrapped['error_output'].maxLength > 0
+          wrapped['errorOutput'].maxLength > 0
           ? (
             <Col xs={24} style={colStyle}>
               <div className="block">
                 <div className="header">Поток вывода ошибок</div>
-                <pre>{ wrapped['error_output'].lines }</pre>
+                <pre>{ wrapped['errorOutput'].lines }</pre>
               </div>
             </Col>
           ) : null

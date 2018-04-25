@@ -29,6 +29,7 @@ export function fetchProblemRuns(problemId, statementId) {
         {
           params,
           withCredentials: true,
+          camelcaseKeys: true,
         },
       ),
       meta: { problemId },
@@ -61,7 +62,7 @@ export function submitProblem(problemId, { languageId, file, source }, statement
     }
 
     return dispatch({
-      type: 'PROBLEM_SUBMIT',
+      type: 'POST_PROBLEM_SUBMIT',
       payload: axios.post(
         url,
         formData,
@@ -70,6 +71,7 @@ export function submitProblem(problemId, { languageId, file, source }, statement
             'Content-Type': 'multipart/form-data',
           },
           withCredentials: true,
+          camelcaseKeys: true,
         },
       ),
       meta: { problemId },

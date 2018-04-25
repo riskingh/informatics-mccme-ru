@@ -13,7 +13,42 @@ import Status from './Status';
 import Tabs, { TabPane } from '../utility/Tabs';
 import Tooltip from '../../components/utility/Tooltip';
 import { LANGUAGES } from '../../constants';
-import * as problemActions from '../../actions/problemActions';
+import * as runActions from '../../actions/runActions';
+
+
+const testsColumns = [
+  {
+    dataIndex: 'key',
+    key: 'key',
+    title: '#',
+    className: 'protocolColumnId',
+  },
+  {
+    dataIndex: 'status',
+    key: 'status',
+    title: 'Статус',
+    render: status => <Status status={status}/>,
+    className: 'protocolColumnStatus',
+  },
+  {
+    dataIndex: 'time',
+    key: 'time',
+    title: <Tooltip title="Время работы">🕓</Tooltip>,
+    className: 'protocolColumnTime',
+  },
+  {
+    dataIndex: 'realTime',
+    key: 'realTime',
+    title: <Tooltip title="Астрономическое время работы">👩‍🚀</Tooltip>,
+    className: 'protocolColumnRealTime',
+  },
+  {
+    dataIndex: 'maxMemoryUsed',
+    key: 'maxMemoryUsed',
+    title: 'Используемая память',
+    className: 'protocolColumnMemoryUsed',
+  },
+];
 
 
 const ProtocolButtonModalContentWrapper = styled.div`
@@ -39,7 +74,7 @@ const ProtocolButtonModalContentWrapper = styled.div`
     text-align: center;
     width: 1px;
   }
-  
+
   @media (max-width: 575px) {
     .ant-tabs {
       margin-top: 20px;
@@ -49,10 +84,9 @@ const ProtocolButtonModalContentWrapper = styled.div`
 
 export class ProtocolButton extends React.Component {
   static propTypes = {
-    problemId: PropTypes.number.isRequired,
-    runId: PropTypes.number.isRequired,
-    contestId: PropTypes.number.isRequired,
-    problems: PropTypes.object.isRequired,
+    runId: PropTypes.number,
+    runs: PropTypes.object.isRequired,
+    user: PropTypes.object.isRequired,
   };
 
   constructor() {
@@ -66,68 +100,28 @@ export class ProtocolButton extends React.Component {
   }
 
   showModal() {
-    const { problemId, runId, contestId, dispatch } = this.props;
-    dispatch(problemActions.fetchProblemRunProtocol(problemId, contestId, runId));
+    const { runId, runs } = this.props;
+    const { ejudgeContestId, ejudgeRunId } = runs[runId];
+    this.props.dispatch(runActions.fetchRunProtocol(runId, ejudgeContestId, ejudgeRunId));
 
     this.setState({...this.state, visible: true});
   }
 
   render() {
-    const { problemId, runId, problems, user } = this.props;
-    const run = _.get(problems, `[${problemId}].runs[${runId}]`, {});
+    const { runId, runs, user } = this.props;
+    const run = runs[runId] || {};
 
-    const {
-      lang_id: langId,
-      protocol,
-      source,
-      user: runUser,
-    } = run;
-    const {
-      tests,
-      compiler_output: compilerOutput,
-    } = protocol || {};
+    const { languageId, protocol, source, userId } = run;
+    const { compilerOutput, tests } = protocol || {};
 
-    const authored = typeof runUser === 'undefined' || runUser.id === user.id;
+    const authored = userId === user.id;
 
-    const testsColumns = [
-      {
-        dataIndex: 'key',
-        key: 'key',
-        title: '#',
-        className: 'protocolColumnId',
-      },
-      {
-        dataIndex: 'status',
-        key: 'status',
-        title: 'Статус',
-        render: status => <Status status={status}/>,
-        className: 'protocolColumnStatus',
-      },
-      {
-        dataIndex: 'time',
-        key: 'time',
-        title: <Tooltip title="Время работы">🕓</Tooltip>,
-        className: 'protocolColumnTime',
-      },
-      {
-        dataIndex: 'realTime',
-        key: 'realTime',
-        title: <Tooltip title="Астрономическое время работы">👩‍🚀</Tooltip>,
-        className: 'protocolColumnRealTime',
-      },
-      {
-        dataIndex: 'maxMemoryUsed',
-        key: 'maxMemoryUsed',
-        title: 'Используемая память',
-        className: 'protocolColumnMemoryUsed',
-      },
-    ];
     const testsData = _.map(tests, (value, key) => ({
       key,
       status: value.status,
       time: (value.time / 1000).toFixed(3),
-      realTime: (value.real_time / 1000).toFixed(3),
-      maxMemoryUsed: value.max_memory_used,
+      realTime: (value.realTime / 1000).toFixed(3),
+      maxMemoryUsed: value.maxMemoryUsed,
     }));
 
     const samples = _.pickBy(tests, test => _.has(test, 'input'));
@@ -151,7 +145,7 @@ export class ProtocolButton extends React.Component {
                   lineNumbers: true,
                   readOnly: true,
                   tabSize: 4,
-                  mode: _.get(LANGUAGES, `[${langId}].mime`, ''),
+                  mode: _.get(LANGUAGES, `[${languageId}].mime`, ''),
                 }}
               />
             </TabPane>
@@ -184,7 +178,7 @@ export class ProtocolButton extends React.Component {
           size="small"
           style={{ padding: 0, display: 'flex' }}
           onClick={this.showModal}
-          disabled={!authored}
+          disabled={!authored || typeof runId === 'undefined'}
         >
           <i className="material-icons">keyboard_arrow_right</i>
         </Button>
@@ -194,6 +188,6 @@ export class ProtocolButton extends React.Component {
 }
 
 export default connect(state => ({
-  problems: state.problems,
+  runs: state.runs,
   user: state.user,
 }))(ProtocolButton);

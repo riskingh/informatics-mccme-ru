@@ -216,4 +216,9 @@ export const STATUSES = {
     long: 'Решение отправлено на перепроверку',
     color: 'orange',
   },
+  1000: {
+    short: 'QD',
+    long: 'В очереди',
+    color: 'orange',
+  },
 };

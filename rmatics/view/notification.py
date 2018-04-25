@@ -72,7 +72,8 @@ def notification_update_run():
         ejudge_run_id=run_id,
         ejudge_contest_id=contest_id
     )
-    db.session.flush([run])
+    db.session.commit()
+    db.session.refresh(run)
 
     g.user = run.user
     notify_user(

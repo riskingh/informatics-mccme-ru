@@ -45,8 +45,9 @@ class TestEjudge__submit_queue_submit_send(TestCase):
         db.session.flush([self.run])
 
         self.file_mock = mock.Mock()
-        self.file_mock.value.decode.return_value = 'source'
+        # self.file_mock.value.decode.return_value = 'source'
         self.file_mock.filename = 'filename'
+        self.file_mock.read.return_value = b'source'
 
     def test_simple(self):
         submit = Submit(
@@ -92,12 +93,21 @@ class TestEjudge__submit_queue_submit_send(TestCase):
             {
                'run': {
                     'id': 1,
+                    'create_time': '2018-03-30 16:59:00',
+                    'ejudge_run_id': 12,
+                    'ejudge_contest_id': 1,
+                    'language_id': 27,
                     'problem_id': 1,
                     'statement_id': 1,
                     'score': None,
-                    'status': None,
-                    'language_id': 27,
-                    'create_time': '2018-03-30 16:59:00',
+                    'source': 'source',
+                    'status': 98,
+                    'user': {
+                        'id': 1,
+                        'firstname': 'Maxim',
+                        'lastname': 'Grishkin',
+                        'ejudge_id': 179,
+                    },
                 },
                 'submit_id': 1,
             }

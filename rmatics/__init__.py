@@ -24,10 +24,7 @@ def create_app(config=None):
     )
 
     # Model
-    from rmatics.model import (
-        db,
-        redis,
-    )
+    from rmatics.model import db
     from rmatics.model.action import Action
     from rmatics.model.comment import Comment
     from rmatics.model.contests_statistic import ContestsStatistic
@@ -60,7 +57,12 @@ def create_app(config=None):
     )
     db.init_app(app)
 
+    # MongoDB
+    from rmatics.model import mongo
+    mongo.init_app(app)
+
     # Redis
+    from rmatics.model import redis
     redis.init_app(app)
 
     # View

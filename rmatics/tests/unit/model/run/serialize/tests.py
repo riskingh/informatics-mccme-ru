@@ -37,11 +37,19 @@ class TestModel__run_serialize(TestCase):
             run.serialize(),
             equal_to({
                 'id': 1,
+                'create_time': '2018-03-24 10:49:00',
+                'ejudge_contest_id': None,
+                'ejudge_run_id': None,
                 'problem_id': self.problems[0].id,
                 'statement_id': self.statements[0].id,
                 'score': 123,
                 'status': 7,
                 'language_id': 27,
-                'create_time': '2018-03-24 10:49:00',
+                'user': {
+                    'id': 1,
+                    'ejudge_id': 179,
+                    'firstname': 'Maxim',
+                    'lastname': 'Grishkin',
+                }
             })
         )

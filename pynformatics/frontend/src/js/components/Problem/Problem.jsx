@@ -16,6 +16,7 @@ import SubmissionsPane from './SubmissionsPane';
 import SubmitForm from './SubmitForm';
 import Tabs, { TabPane } from '../../components/utility/Tabs';
 import * as problemActions from '../../actions/problemActions';
+import * as submitActions from '../../actions/submitActions';
 
 
 const ProblemWrapper = styled.div`
@@ -31,7 +32,7 @@ const ProblemWrapper = styled.div`
     color: ${palette('secondary', 0)};
     width: 100%;
     text-align: center;
-    
+
     i {
       cursor: pointer;
       display: none;
@@ -53,30 +54,30 @@ const ProblemWrapper = styled.div`
       flex-flow: column nowrap;
     }
   }
-    
+
   .problemStatement {
     text-align: left;
     color: ${palette('other', 7)};
-    
+
     .legend {
-      p { margin-bottom: 34px; }  
+      p { margin-bottom: 34px; }
     }
-    
-    div { 
+
+    div {
       margin-bottom: 34px;
-    
+
       .section-title {
         width: 100%;
         margin-bottom: 20px;
-        
+
         display: flex;
         align-items: center;
-        
+
         font-size: 19px;
         font-weight: 500;
         color: ${palette('secondary', 2)};
         white-space: nowrap;
-        
+
         &:before {
           content: '';
           width: 5px;
@@ -85,7 +86,7 @@ const ProblemWrapper = styled.div`
           display: flex;
           margin-right: 15px;
         }
-        
+
         &:after {
           content: '';
           width: 100%;
@@ -97,54 +98,57 @@ const ProblemWrapper = styled.div`
       }
     }
   }
-  
+
   .problemSamples {
     > *:not(:last-child) { margin-bottom: 34px; }
   }
-  
+
   .tabStatement > * { margin-bottom: 30px; }
 `;
 
 
 export class Problem extends React.Component {
-  static contextTypes = {
-    statementId: PropTypes.number,
-  };
-
   static propTypes = {
     problemId: PropTypes.number.isRequired,
+    statementId: PropTypes.number,
     onTabChange: PropTypes.func,
   };
 
-  constructor(props, context) {
-    super(props, context);
+  constructor(props) {
+    super(props);
 
     this.problemId = this.props.problemId;
 
-    this.fetchProblemData = this.fetchProblemData.bind(this);
-    this.fetchProblemData(props.problemId);
+    this.fetchProblem = this.fetchProblem.bind(this);
+    this.fetchProblemRuns = this.fetchProblemRuns.bind(this);
+    this.fetchProblem();
+    this.fetchProblemRuns();
   }
 
-  componentWillReceiveProps(nextProps) {
+  componentDidUpdate(prevProps) {
     const { problemId } = this.props;
-    const { problemId: nextProblemId } = nextProps;
+    const { problemId: prevProblemId } = prevProps;
+    this.problemId = problemId;
 
-    if (problemId !== nextProblemId) {
-      this.fetchProblemData(nextProblemId);
+    if (problemId !== prevProblemId) {
+      this.fetchProblem();
+      this.fetchProblemRuns();
     }
   }
 
-  componentDidUpdate() {
-    this.problemId = this.props.problemId;
+  fetchProblem() {
+    const { problemId } = this.props;
+    this.props.dispatch(problemActions.fetchProblem(problemId));
   }
 
-  fetchProblemData(problemId) {
-    this.props.dispatch(problemActions.fetchProblem(problemId));
-    this.props.dispatch(problemActions.fetchProblemRuns(problemId, this.context.statementId));
+  fetchProblemRuns() {
+    const { problemId, statementId } = this.props;
+    this.props.dispatch(problemActions.fetchProblemRuns(problemId, statementId));
+    this.props.dispatch(submitActions.fetchUserSubmits());
   }
 
   render() {
-    const { problemId } = this.props;
+    const { problemId, userId } = this.props;
     const {
       name: problemTitle,
       content: problemStatement,
@@ -153,10 +157,10 @@ export class Problem extends React.Component {
       memorylimit: problemMemoryLimit,
       show_limits: problemShowLimits,
     } = _.get(this.props.problems, `[${problemId}].data`, {});
-    const problemRuns = _.get(this.props.problems[problemId], 'runs', {});
-    const userProblemRuns = _.pickBy(problemRuns, (value) => typeof value.user === 'undefined');
+    const problemRuns = _.get(this.props.problems[problemId], 'runs', []);
+    const problemSubmits = _.get(this.props.problems[problemId], 'submits', []);
 
-    const additionalTabsProps = (problemId !== this.problemId)
+    const additionalTabsProps = (this.problemId !== problemId)
       ? { activeKey: 'statement' }
       : {};
 
@@ -183,23 +187,28 @@ export class Problem extends React.Component {
                   </div>
                 ) : null
               }
-              <div 
-                className="problemStatement" 
-                dangerouslySetInnerHTML={{ __html: problemStatement }} 
-                ref={(node) => window.MathJax.Hub.Queue(['Typeset', window.MathJax.Hub, node])}
+              <div
+                className="problemStatement"
+                dangerouslySetInnerHTML={{ __html: problemStatement }}
+                // ref={(node) => window.MathJax.Hub.Queue(['Typeset', window.MathJax.Hub, node])}
               />
               <Header style={{ marginBottom: 30 }}>Примеры</Header>
               <div className="problemSamples">
                 { _.map(problemSamples, ({input, correct}, id) => <Sample key={id} input={input} correct={correct}/>) }
               </div>
               <SubmitForm problemId={problemId} />
-              <Runs problemId={problemId} runs={userProblemRuns} />
+              <Runs
+                userId={userId}
+                runIds={problemRuns}
+                submitIds={problemSubmits}
+                fetchRuns={this.fetchProblemRuns}
+              />
             </TabPane>
             <TabPane tab="Результаты" key="standings">
               <StandingsPane problemId={problemId} />
             </TabPane>
-            <TabPane tab="Посылки" key="runs">
-              <SubmissionsPane problemId={problemId} runs={problemRuns} />
+            <TabPane tab="Посылки FIXME" key="runs">
+              <SubmissionsPane problemId={problemId} runIds={problemRuns} />
             </TabPane>
             <TabPane tab="Решение" key="solution" disabled />
             <TabPane tab="Темы и источники" key="sources" disabled />
@@ -212,4 +221,5 @@ export class Problem extends React.Component {
 
 export default connect(state => ({
   problems: state.problems,
+  userId: state.user.id,
 }))(Problem);

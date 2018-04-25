@@ -21,6 +21,10 @@ def user_room(user_id):
     return f'user:{user_id}'
 
 
+def notify_all(*args, **kwargs):
+    socket.emit(*args, **kwargs)
+
+
 def notify_user(user_id, *args, **kwargs):
     kwargs['room'] = user_room(user_id)
     socket.emit(*args, **kwargs)

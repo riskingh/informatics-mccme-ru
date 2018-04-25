@@ -7,6 +7,8 @@ from .submit import Submit
 from .worker import SubmitWorker
 from rmatics.model import redis
 from rmatics.utils.redis.queue import RedisQueue
+from rmatics.websocket import notify_all
+from rmatics.websocket.events import QUEUE_STATUS
 
 
 log = logging.getLogger('submit_queue')
@@ -37,6 +39,17 @@ class SubmitQueue(RedisQueue):
     def __init__(self, key=DEFAULT_SUBMIT_QUEUE):
         super(SubmitQueue, self).__init__(key=key)
 
+    def get_last_get_id(self):
+        return int(redis.get(last_get_id_key(self.key)) or '0')
+
+    def notify_queue_status(self):
+        notify_all(
+            QUEUE_STATUS,
+            {
+                'last_get_id': self.get_last_get_id(),
+            }
+        )
+
     def submit(self,
                user_id,
                problem_id,
@@ -57,7 +70,7 @@ class SubmitQueue(RedisQueue):
                 statement_id=statement_id,
             )
             self.put(submit.encode(), pipe=pipe)
-            redis.hset(
+            pipe.hset(
                 user_submits_key(self.key, user_id),
                 submit.id,
                 pickle.dumps(submit.encode())
@@ -66,11 +79,11 @@ class SubmitQueue(RedisQueue):
         submit = redis.transaction(
             _submit,
             self.key,
+            last_get_id_key(self.key),
             last_put_id_key(self.key),
             value_from_callable=True
         )
         return submit
-
 
     def get(self):
         def _get(pipe):
@@ -83,10 +96,12 @@ class SubmitQueue(RedisQueue):
             _get,
             self.key,
             last_get_id_key(self.key),
+            last_put_id_key(self.key),
             value_from_callable=True,
         )
 
         redis.hdel(user_submits_key(self.key, submit.user_id), submit.id)
+        self.notify_queue_status()
         return submit
 
     def peek_all_submits(self):

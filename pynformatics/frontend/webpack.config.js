@@ -103,8 +103,7 @@ module.exports = {
         pathRewrite: {'^/api': ''},
       },
       '/socket.io': {
-        target: 'http://informatics.msk.ru:6349/socket.io',
-        // pathRewrite: {'.*': ''},
+        target: 'http://informatics.msk.ru:6349',
         ws: true,
       }
     },

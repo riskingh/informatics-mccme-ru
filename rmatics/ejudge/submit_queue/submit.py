@@ -1,5 +1,6 @@
 import io
 import logging
+from flask import current_app, g
 from werkzeug.datastructures import FileStorage
 
 from rmatics.ejudge.ejudge_proxy import submit
@@ -114,10 +115,14 @@ class Submit:
             ejudge_run_id=run_id,
             ejudge_contest_id=self.problem.ejudge_contest_id,
             ejudge_language_id=self.language_id,
+            ejudge_status=98, # compiling
         )
         db.session.add(run)
-        db.session.flush([run])
+        db.session.commit()
 
+        db.session.refresh(run)
+        run.update_source(text=self.source)
+        g.user = self.user
         notify_user(
             self.user.id,
             SUBMIT_SUCCESS,
@@ -126,8 +131,6 @@ class Submit:
                 'submit_id': self.id,
             }
         )
-
-        db.session.commit()
 
     def encode(self):
         file = self.file.read()

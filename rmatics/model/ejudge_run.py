@@ -25,7 +25,7 @@ class EjudgeRun(db.Model):
         {'schema': 'ejudge'}
     )
     __tablename__ = 'runs'
-   
+
     run_id = db.Column(db.Integer, primary_key=True)
     contest_id = db.Column(db.Integer, primary_key=True)
     size = db.Column(db.Integer)
@@ -89,7 +89,7 @@ class EjudgeRun(db.Model):
         14: "Timer signal",
         15: "Termination signal"
     }
-    
+
     @db.reconstructor
     def init_on_load(self):
         self.out_path = "/home/judges/{0:06d}/var/archive/output/{1}/{2}/{3}/{4:06d}.zip".format(
@@ -104,20 +104,28 @@ class EjudgeRun(db.Model):
 
     @lazy
     def get_audit(self):
-        data = safe_open(submit_path(audit_path, self.contest_id, self.run_id), "r").read()
+        data = safe_open(submit_path(audit_path, self.contest_id, self.run_id), 'r').read()
         if type(data) == bytes:
-            data = data.decode("ascii")
+            data = data.decode('ascii')
         return data
     @lazy
     def get_sources(self):
-        data = safe_open(submit_path(sources_path, self.contest_id, self.run_id), "r").read()
-        if type(data) == bytes:
-            data = data.decode("ascii")
+        data = safe_open(submit_path(sources_path, self.contest_id, self.run_id), 'rb').read()
+        for encoding in ['utf-8', 'ascii', 'windows-1251']:
+            try:
+                data = data.decode(encoding)
+            except:
+                print('decoded:', encoding)
+                pass
+            else:
+                break
+        else:
+            return 'Ошибка кодировки'
         return data
 
     def get_output_file(self, test_num, tp="o", size=None): #tp: o - output, e - stderr, c - checker
         data = self.get_output_archive().getfile("{0:06}.{1}".format(test_num, tp)).decode('ascii')
-        if size is not None: 
+        if size is not None:
             data = data[:size]
         return data
 
@@ -233,7 +241,7 @@ class EjudgeRun(db.Model):
                    real_time = int(real_time)
                 except ValueError:
                    real_time = 0
-                   
+
                 test = {
                     'status': status,
                     'string_status': get_string_status(status),
@@ -242,7 +250,7 @@ class EjudgeRun(db.Model):
                     'max_memory_used' : max_memory_used,
                 }
                 judge_info = {}
-            
+
                 for _type in ('input', 'output', 'correct', 'stderr', 'checker'):
                     lst = node.getElementsByTagName(_type)
                     if lst and lst[0].firstChild:
@@ -261,17 +269,17 @@ class EjudgeRun(db.Model):
                 #print([test['time'] for test in self.tests.values()] + [test['real_time'] for test in self.tests.values()])
                 self.maxtime = max([test['time'] for test in self.tests.values()] + [test['real_time'] for test in self.tests.values()])
             except ValueError:
-                pass        
-    
+                pass
+
     @staticmethod
     def get_by(run_id, contest_id):
         try:
-            return db.session.query(EjudgeRun).filter(EjudgeRun.run_id == int(run_id)).filter(EjudgeRun.contest_id == int(contest_id)).first()            
+            return db.session.query(EjudgeRun).filter(EjudgeRun.run_id == int(run_id)).filter(EjudgeRun.contest_id == int(contest_id)).first()
         except:
             return None
 
-    @lazy      
-    def _get_compilation_protocol(self): 
+    @lazy
+    def _get_compilation_protocol(self):
         filename = submit_path(protocols_path, self.contest_id, self.run_id)
         if filename:
             if os.path.isfile(filename):
@@ -302,7 +310,7 @@ class EjudgeRun(db.Model):
                 return e
         else:
             return ''
-    
+
     @lazy
     def _get_protocol(self):
         filename = submit_path(protocols_path, self.contest_id, self.run_id)
@@ -313,7 +321,7 @@ class EjudgeRun(db.Model):
 
     protocol = property(_get_protocol)
     compilation_protocol = property(_get_compilation_protocol)
-    
+
     @lazy
     def fetch_tested_protocol_data(self):
         self.xml = xml.dom.minidom.parseString(str(self.protocol))

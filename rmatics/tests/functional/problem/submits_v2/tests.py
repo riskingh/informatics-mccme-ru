@@ -36,11 +36,14 @@ class TestAPI__problem_submits_v2(TestCase):
         assert_that(
             response.json,
             equal_to({
-                'id': 1,
-                'user_id': self.users[0].id,
-                'problem_id': self.problems[0].id,
-                'source': 'print("Русский текст")',
-                'language_id': 27,
+                'last_get_id': 0,
+                'submit': {
+                    'id': 1,
+                    'user_id': self.users[0].id,
+                    'problem_id': self.problems[0].id,
+                    'source': 'print("Русский текст")',
+                    'language_id': 27,
+                }
             })
         )
         assert_that(

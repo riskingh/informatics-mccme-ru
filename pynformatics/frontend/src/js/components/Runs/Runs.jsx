@@ -1,7 +1,7 @@
 import PropTypes from 'prop-types';
 import React from 'react';
 import styled from 'styled-components';
-import { Table } from 'antd'
+import { Icon, Table } from 'antd'
 import { connect } from 'react-redux';
 import { palette } from 'styled-theme';
 import * as _ from 'lodash';
@@ -12,6 +12,71 @@ import Status from './Status';
 import moment from '../../utils/moment';
 import { LANGUAGES } from '../../constants';
 import * as problemActions from '../../actions/problemActions';
+
+
+const runsColumns = (fetchRuns, userColumn) => [
+  {
+    dataIndex: 'status',
+    key: 'status',
+    render: status => <Status status={status}/>,
+    className: 'runsColumnStatus',
+  },
+  {
+    dataIndex: 'id',
+    key: 'id',
+    title: '#',
+    className: 'runsColumnId',
+  },
+  (userColumn
+    ? {
+      dataIndex: 'user',
+      key: 'user',
+      title: 'Участник',
+      render: user => `${user.firstname} ${user.lastname}`,
+    }
+    : {}
+  ),
+  {
+    dataIndex: 'createTime',
+    key: 'createTime',
+    title: 'Дата',
+    className: 'runsColumnDate',
+    render: createTime => createTime
+      ? moment(createTime).calendar(null, {
+        sameDay: 'HH:mm',
+        lastDay: '[Вчера в] HH:mm',
+        lastWeek: 'DD.MM.YYYY HH:mm',
+        sameElse: 'DD.MM.YYYY HH:mm',
+      })
+      : '—',
+  },
+  {
+    dataIndex: 'languageId',
+    key: 'languageId',
+    title: 'Язык',
+    className: 'runsColumnLanguage',
+    render: languageId => _.get(LANGUAGES, `[${languageId}].name`, ''),
+  },
+  {
+    dataIndex: 'score',
+    key: 'score',
+    title: 'Баллы',
+    className: 'runsColumnScore',
+  },
+  {
+    className: 'refreshBtn',
+    key: 'refresh',
+    title: (
+      <i
+        onClick={fetchRuns}
+        className="material-icons"
+      >
+        sync
+      </i>
+    ),
+    render: row => <ProtocolButton runId={row.runId} />
+  },
+];
 
 
 const RunsWrapper = styled.div`
@@ -36,16 +101,16 @@ const RunsWrapper = styled.div`
     text-align: center;
     white-space: nowrap;
   }
-  
+
   .buttons {
     display: flex;
     flex-flow: row wrap;
     justify-content: space-between;
     margin-top: 10px;
-    
+
     @media (max-width: 767px) { display: none; }
   }
-  
+
   .refreshBtn {
     i { cursor: pointer; }
     span { display: flex; }
@@ -58,15 +123,18 @@ export class Runs extends React.Component {
   };
 
   static propTypes = {
-    problemId: PropTypes.number.isRequired,
-    runs: PropTypes.object.isRequired,
+    runIds: PropTypes.array.isRequired,
+    submitIds: PropTypes.array,
+    userId: PropTypes.number,
     showUserInfo: PropTypes.bool,
     showRows: PropTypes.number,
-
+    fetchRuns: PropTypes.func,
+    runs: PropTypes.object.isRequired,
     windowWidth: PropTypes.number.isRequired,
   };
 
   static defaultProps = {
+    submitIds: [],
     showUserInfo: false,
     showRows: 5,
   };
@@ -78,16 +146,7 @@ export class Runs extends React.Component {
       showMore: false,
     };
 
-    this.fetchProblemRuns = this.fetchProblemRuns.bind(this);
     this.toggleShowMore = this.toggleShowMore.bind(this);
-  }
-
-  fetchProblemRuns() {
-    const { statementId } = this.context;
-    const { problemId } = this.props;
-    this.fetchProblemRunsPromise = this.props.dispatch(
-      problemActions.fetchProblemRuns(problemId, statementId)
-    );
   }
 
   toggleShowMore() {
@@ -100,99 +159,52 @@ export class Runs extends React.Component {
   render() {
     const { showMore } = this.state;
     const {
-      problemId,
+      fetchRuns,
+      runIds,
+      runs,
       showRows,
       showUserInfo,
-      windowWidth,
+      submitIds,
+      submits,
       user,
+      userId,
+      users,
+      windowWidth,
     } = this.props;
 
-    const columns = [
-      {
-        dataIndex: 'status',
-        key: 'status',
-        render: status => <Status status={status}/>,
-        className: 'runsColumnStatus',
-      },
-      {
-        dataIndex: 'id',
-        key: 'id',
-        title: '#',
-        className: 'runsColumnId',
-      },
-      {
-        dataIndex: 'time',
-        key: 'time',
-        title: 'Дата',
-        className: 'runsColumnDate',
-      },
-      {
-        dataIndex: 'language',
-        key: 'language',
-        title: 'Язык',
-        className: 'runsColumnLanguage',
-      },
-      {
-        dataIndex: 'score',
-        key: 'score',
-        title: 'Баллы',
-        className: 'runsColumnScore',
-      },
-      {
-        className: 'refreshBtn',
-        key: 'refresh',
-        title: (
-          <i
-            onClick={this.fetchProblemRuns}
-            className="material-icons"
-          >
-            sync
-          </i>
-        ),
-        render: run => (
-          <ProtocolButton
-            problemId={run.problemId}
-            runId={run.id}
-            contestId={run.contestId}
-          />
-        ),
-      },
-    ];
+    const submitsData = _.chain(submits)
+      .pick(submitIds)
+      .filter(submit => typeof submit === 'undefined' || submit.userId === userId)
+      .map(submit => ({
+        ...submit,
+        id: `${submit.queuePosition} в очереди`,
+        key: 'submit' + submit.id,
+        score: '—',
+        status: '1000',
+        submitId: submit.id,
+        user: users[submit.userId],
+      }))
+      .orderBy(['id'], ['desc'])
+      .value();
 
-    if (showUserInfo) {
-      columns.splice(2, 0, {
-        dataIndex: 'user',
-        key: 'user',
-        title: 'Участник'
-      });
-    }
+    const runsData = _.chain(runs)
+      .pick(runIds)
+      .filter(run => typeof userId === 'undefined' || run.userId === userId)
+      .map(run => ({
+        ...run,
+        key: 'run' + run.id,
+        runId: run.id,
+        user: users[run.userId],
+      }))
+      .orderBy(['createTime'], ['desc'])
+      .value();
 
-    const data = _.sortBy(_.map(this.props.runs, (value, key) => ({
-      key,
-      problemId,
-      contestId: parseInt(value.contest_id),
-      id: parseInt(key),
-      status: value.status,
-      time: value.create_time 
-        ? moment(value.create_time).calendar(null, {
-          sameDay: 'HH:mm',
-          lastDay: '[Вчера в] HH:mm',
-          lastWeek: 'DD.MM.YYYY HH:mm',
-          sameElse: 'DD.MM.YYYY HH:mm',
-        }) : '',
-      language: _.get(LANGUAGES, `[${value.lang_id}].name`, ''),
-      score: value.score,
-      user: (
-        value.user
-          ? value.user.firstname + ' ' + value.user.lastname
-          : user.firstname + ' ' + user.lastname
-      )
-    })), row => -row.id);
+    const data = _.concat(submitsData, runsData);
 
     return (
       <RunsWrapper>
         <Table
-          columns={columns}
+          columns={runsColumns(fetchRuns, showUserInfo)}
           dataSource={ showMore || windowWidth < 768 ? data : data.slice(0, showRows) }
           pagination={false}
           scroll={{ x: 600 }}
@@ -213,6 +225,9 @@ export class Runs extends React.Component {
 }
 
 export default connect(state => ({
+  runs: state.runs,
+  submits: state.submits,
   user: state.user,
+  users: state.users,
   windowWidth: state.ui.width,
 }))(Runs);

@@ -1,4 +1,9 @@
-from rmatics.model import db
+from flask import g
+
+from rmatics.model import (
+    db,
+    mongo,
+)
 from rmatics.model.ejudge_run import EjudgeRun
 from rmatics.utils.functions import attrs_to_dict
 
@@ -34,7 +39,7 @@ class Run(db.Model):
     create_time = db.Column(db.DateTime)
 
     user = db.relationship('SimpleUser', backref='runs')
-    problem = db.relationship('EjudgeProblem', backref='runs2')
+    problem = db.relationship('EjudgeProblem', backref=db.backref('runs', lazy='dynamic'))
     statement = db.relationship('Statement', backref='runs')
 
     # Поля скопированные из ejudge.runs
@@ -51,6 +56,27 @@ class Run(db.Model):
     ejudge_last_change_time = db.Column('ej_last_change_time', db.DateTime)
 
     ejudge_run = db.relationship('EjudgeRun', backref='run')
+
+    def update_source(self, text=None):
+        if not text:
+            text = self.ejudge_run.get_sources()
+        mongo.db.source.insert_one({
+            'run_id': self.id,
+            'text': text.encode('utf-8'),
+        })
+        return text
+
+    @property
+    def source(self):
+        data = mongo.db.source.find_one({'run_id': self.id})
+        if not data:
+            text = self.update_source()
+        else:
+            text = data.get('text', None)
+
+        if text:
+            text = text.decode('utf-8')
+        return text
 
     @property
     def status(self):
@@ -111,15 +137,27 @@ class Run(db.Model):
         if attributes is None:
             attributes = (
                 'id',
+                'user',
                 'problem_id',
                 'statement_id',
                 'score',
                 'status',
                 'language_id',
                 'create_time',
+                'ejudge_run_id',
+                'ejudge_contest_id',
+            )
+        if hasattr(g, 'user') and g.user.id == self.user_id:
+            attributes = (
+                *attributes,
+                'source',
             )
         serialized = attrs_to_dict(self, *attributes)
+
         if 'create_time' in attributes:
             serialized['create_time'] = str(self.create_time)
+
+        if 'user' in attributes:
+            serialized['user'] = self.user.serialize()
 
         return serialized

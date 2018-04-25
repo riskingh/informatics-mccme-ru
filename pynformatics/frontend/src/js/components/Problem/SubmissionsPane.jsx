@@ -6,15 +6,13 @@ import Runs from '../Runs/Runs';
 
 export default class SubmissionsPane extends React.Component {
   static propTypes = {
-    problemId: PropTypes.number.isRequired,
-    runs: PropTypes.object.isRequired,
+    runIds: PropTypes.array.isRequired,
   };
 
   render() {
     return (
       <Runs
-        problemId={this.props.problemId}
-        runs={this.props.runs}
+        runIds={this.props.runIds}
         showRows={15}
         showUserInfo={true}
       />

@@ -35,12 +35,12 @@ import click
 from flask.cli import FlaskGroup
 from gevent.pool import Group
 
-from rmatics.wsgi import app
+from rmatics.wsgi import application
 from rmatics.ejudge.submit_queue.queue import SubmitQueue
 from rmatics.ejudge.submit_queue.worker import SubmitWorker
 
 
-@app.cli.command()
+@application.cli.command()
 @click.option('--workers', default=2)
 def main(workers):
     queue = SubmitQueue()

@@ -5,6 +5,7 @@ import sys
 from rmatics import create_app
 from rmatics.model import (
     db,
+    mongo,
     redis,
 )
 from rmatics.model.group import (
@@ -35,9 +36,11 @@ class TestCase(flask_testing.TestCase):
         db.create_all()
 
     def tearDown(self):
-        # return
         db.session.remove()
         db.drop_all()
+
+        assert mongo.db.name == 'test'
+        mongo.db.client.drop_database(mongo.db)
 
         assert redis.connection_pool.connection_kwargs['db'] == 2
         redis.flushdb()

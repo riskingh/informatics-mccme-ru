@@ -10,7 +10,10 @@ from sqlalchemy import and_
 
 from rmatics.ejudge.ejudge_proxy import submit
 from rmatics.ejudge.serve_internal import EjudgeContestCfg
-from rmatics.ejudge.submit_queue import queue_submit
+from rmatics.ejudge.submit_queue import (
+    get_last_get_id,
+    queue_submit,
+)
 from rmatics.model.user import SimpleUser
 from rmatics.model.problem import (
     EjudgeProblem,
@@ -70,7 +73,10 @@ def problem_submit_v2(problem_id):
         statement_id=statement_id,
     )
 
-    return jsonify(submit.serialize())
+    return jsonify({
+        'last_get_id': get_last_get_id(),
+        'submit': submit.serialize()
+    })
 
 
 @problem.route('/<int:problem_id>')
@@ -85,30 +91,21 @@ def problem_get(problem_id):
 })
 def problem_runs(problem_id):
     load_problem_or_404(problem_id)
-    runs = g.problem.ejudge_runs
+
+    runs = g.problem.runs
     if 'statement_id' in request.args:
         statement_id = int(request.args['statement_id'])
-        load_statement(statement_id)
-
-        runs = runs \
-            .join(
-                PynformaticsRun,
-                and_(
-                    PynformaticsRun.run_id == EjudgeRun.run_id,
-                    PynformaticsRun.contest_id == EjudgeRun.contest_id
-                )
-            ) \
-            .filter(PynformaticsRun.statement_id == statement_id)
+        load_statement(statement_id, silent=False)
+        runs = runs.filter_by(statement_id=statement_id)
     elif g.get('user', None):
-        runs = runs.filter_by(user_id=int(g.user.ejudge_id))
+        runs = runs.filter_by(user_id=g.user.id)
     else:
         return jsonify({})
 
-    runs_dict = {
-        run.run_id: run.serialize()
+    return jsonify({
+        run.id: run.serialize()
         for run in runs.all()
-    }
-    return jsonify(runs_dict)
+    })
 
 
 # @view_config(route_name='problem.standings', renderer='json', request_method='GET')
