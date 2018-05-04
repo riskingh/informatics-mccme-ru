@@ -21,7 +21,7 @@ class TestModel__course_serialize(TestCase):
 
     def test_without_password(self):
         assert_that(
-            self.course.serialize(None),
+            self.course.serialize(),
             has_entries({
                 'id': self.course.id,
                 'full_name': self.course.full_name,
@@ -33,7 +33,7 @@ class TestModel__course_serialize(TestCase):
     def test_with_password(self):
         self.course.password = 'secret'
         assert_that(
-            self.course.serialize(None),
+            self.course.serialize(),
             has_entries({
                 'id': self.course.id,
                 'full_name': self.course.full_name,

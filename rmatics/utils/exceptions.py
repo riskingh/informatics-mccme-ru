@@ -8,7 +8,7 @@ class BaseApiException(Exception):
 
     def __str__(self):
         return self.message
-    
+
     def serialize(self):
         return {
             'code': self.code,
@@ -53,6 +53,11 @@ class AuthOAuthBadProvider(BadRequest):
 
 class UserOAuthIdAlreadyUsed(Forbidden):
     message = 'OAuth ID already in use'
+
+
+# Course
+class CourseNotFound(NotFound):
+    message = 'No course with this id'
 
 
 # Ejudge

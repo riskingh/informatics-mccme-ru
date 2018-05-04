@@ -7,6 +7,7 @@ from functools import wraps
 from sqlalchemy import exists, join
 
 from rmatics.model import db
+from rmatics.model.course import Course
 from rmatics.model.problem import EjudgeProblem
 from rmatics.model.role import (
     Role,
@@ -15,6 +16,7 @@ from rmatics.model.role import (
 from rmatics.model.statement import Statement
 from rmatics.model.user import SimpleUser
 from rmatics.utils.exceptions import (
+    CourseNotFound,
     Forbidden,
     Unauthorized,
     StatementNotFound,
@@ -46,6 +48,13 @@ def load_statement(statement_id, silent=True):
     g.statement = statement
     if not silent and not statement:
         raise StatementNotFound
+
+
+def load_course(course_id, silent=True):
+    course = db.session.query(Course).filter_by(id=course_id).first()
+    g.course = course
+    if not silent and not course:
+        raise CourseNotFound
 
 
 def require_auth(func):

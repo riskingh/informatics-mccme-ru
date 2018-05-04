@@ -21,6 +21,8 @@ theme.palette.other = [
   '#788195', // 13, problem cell empty
   '#D3D5D7', // 14 grey background
   '#F3F5F7', // 15 grey background
+  '#2D3446', // 16 header course page
+  '#393A39', // 17 block title
 ];
 
 export default theme;

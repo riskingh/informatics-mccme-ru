@@ -21,7 +21,7 @@ class TestView__statement_get_by_module(TestCase):
 
         self.course_module = CourseModule(
             id=123,
-            instance=self.statement.id,
+            instance_id=self.statement.id,
             module=19,
         )
         db.session.add(self.course_module)

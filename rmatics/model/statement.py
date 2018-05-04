@@ -7,6 +7,7 @@ from sqlalchemy.orm.collections import attribute_mapped_collection
 from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
 
 from rmatics.model import db
+from rmatics.model.course_module import CourseModuleInstance
 from rmatics.model.participant import Participant
 from rmatics.utils.constants import LANG_NAME_BY_ID
 from rmatics.utils.exceptions import (
@@ -24,9 +25,15 @@ from rmatics.utils.functions import attrs_to_dict
 from rmatics.utils.json_type import JsonType
 
 
-class Statement(db.Model):
+class Statement(CourseModuleInstance, db.Model):
     __table_args__ = {'schema': 'moodle'}
     __tablename__ = 'mdl_statements'
+    __mapper_args__ = {
+        'polymorphic_identity': 'statement',
+        'concrete': True,
+    }
+
+    MODULE = 19
 
     id = db.Column(db.Integer, primary_key=True)
     course_id = db.Column('course', db.Integer, db.ForeignKey('moodle.mdl_course.id'))
@@ -46,12 +53,6 @@ class Statement(db.Model):
     settings = db.Column(JsonType)
 
     course = db.relationship('Course', backref=db.backref('statements', lazy='dynamic'))
-
-    course_module = db.relationship(
-        'CourseModule',
-        primaryjoin='and_(Statement.id==CourseModule.instance, CourseModule.module==19)',
-        foreign_keys=[id],
-    )
 
     problems = association_proxy('StatementProblems', 'problem')
     user = association_proxy('StatementUsers1', 'user')
@@ -278,19 +279,19 @@ class StatementUser(db.Model):
     __table_args__ = {'schema': 'moodle'}
     __tablename__ = 'mdl_olympiad'
 
-    id = db.Column(db.Integer, primary_key=True)    
+    id = db.Column(db.Integer, primary_key=True)
     statement_id = db.Column('contest_id', db.Integer, db.ForeignKey('moodle.mdl_statements.id'))
     user_id = db.Column(db.Integer, db.ForeignKey('moodle.mdl_user.id'))
 
     # statement = db.relationship('Statement', backref=db.backref('StatementUsers1', lazy='dynamic'), lazy='dynamic')
-    # user = db.relationship('EjudgeUser', backref=db.backref('StatementUsers2', lazy='dynamic'), lazy='dynamic')             
+    # user = db.relationship('EjudgeUser', backref=db.backref('StatementUsers2', lazy='dynamic'), lazy='dynamic')
 
 
 class StatementProblem(db.Model):
     __table_args__ = {'schema': 'moodle'}
     __tablename__ = 'mdl_statements_problems_correlation'
 
-    id = db.Column(db.Integer, primary_key=True)    
+    id = db.Column(db.Integer, primary_key=True)
     statement_id = db.Column(db.Integer, db.ForeignKey('moodle.mdl_statements.id'))
     problem_id = db.Column(db.Integer, db.ForeignKey('moodle.mdl_problems.id'))
     rank = db.Column('rank', db.Integer)
@@ -300,7 +301,7 @@ class StatementProblem(db.Model):
 
     # reference to the "Keyword" object
     problem = db.relationship('Problem', backref=db.backref('StatementProblems'))
-    
+
     def __init__(self, statement_id, problem_id, rank):
         self.statement_id = statement_id
         self.problem_id = problem_id

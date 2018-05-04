@@ -18,6 +18,11 @@ import MenuTop from '../../svg/menu_top.svg';
 import Upload from '../../svg/upload.svg';
 import ToggleDrawer from '../../svg/toggle-drawer.svg';
 
+import TypeContest from '../../svg/type_contest.svg';
+import TypePage from '../../svg/type_page.svg';
+import TypeText from '../../svg/type_text.svg';
+import TypeTriangle from '../../svg/type_triangle.svg';
+
 
 const IconWrapper = styled.i`
   text-align: center;
@@ -29,7 +34,7 @@ const IconWrapper = styled.i`
     max-width: 24px;
     max-height: 24px;
   }
-  
+
   &.icon-sz-18 {
     width: 18px;
     height: 18px;
@@ -38,7 +43,7 @@ const IconWrapper = styled.i`
       max-height: 18px;
     }
   }
-  
+
   &.icon-sz-30 {
     width: 30px;
     height: 30px;
@@ -76,3 +81,8 @@ export const MenuTopIcon = Icon(MenuTop);
 
 export const ToggleDrawerIcon = Icon(ToggleDrawer);
 export const UploadIcon = Icon(Upload);
+
+export const TypeContestIcon = Icon(TypeContest);
+export const TypePageIcon = Icon(TypePage);
+export const TypeTextIcon = Icon(TypeText);
+export const TypeTriangleIcon = Icon(TypeTriangle);

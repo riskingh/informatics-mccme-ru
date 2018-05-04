@@ -2,6 +2,7 @@ import { combineReducers } from 'redux';
 import { reducer as form } from 'redux-form';
 
 import context from './contextReducer';
+import courses from './coursesReducer';
 import group from './groupReducer';
 import problems from './problemsReducer';
 import routing from './routingReducer';
@@ -15,6 +16,7 @@ import users from './usersReducer';
 
 export default combineReducers({
   context,
+  courses,
   group,
   form,
   problems,

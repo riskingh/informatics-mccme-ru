@@ -17,6 +17,7 @@ import theme from '../theme';
 
 import AboutPage from '../pages/About/About';
 import Auth from '../pages/Auth/Auth';
+import CoursePage from '../pages/Course/Course';
 import GroupInvitePage from '../pages/GroupInvite/GroupInvite';
 import MainPage from '../pages/Main/Main';
 import NotFound from '../pages/Errors/NotFound';
@@ -101,6 +102,7 @@ export default class App extends React.Component {
                     <Route exact path="/contest/:statementId" component={StatementPage} />
                     <Route exact path="/contest/:statementId/standings" component={StatementPage} />
                     <Route exact path="/contest/:statementId/problem/:problemRank" component={StatementPage} />
+                    <Route exact path="/course/:courseId" component={CoursePage} />
                     <Route exact path="/goto" component={TempGotoProblemPage} />
                     <Route exact path="/login" component={Login} />
                     <Route exact path="/problem/:problemId" component={ProblemPage} />

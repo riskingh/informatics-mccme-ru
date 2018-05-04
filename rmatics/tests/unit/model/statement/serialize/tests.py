@@ -31,7 +31,7 @@ class TestModel__statement_serialize(TestCase):
         db.session.flush()
 
         self.course_module = CourseModule(
-            instance=self.statement.id,
+            instance_id=self.statement.id,
             module=19,
             course_id=self.course.id,
         )
